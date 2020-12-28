@@ -3,9 +3,45 @@
     <title>loadarrr demo</title>
 </head>
 <body>
+    <div>
 
-    <button>stop</button>
+        <button id="visible-button">show/hide</button>
+        <button id="enable-button">start/stop</button>
+
+    </div>
+
 
     <script type="text/javascript" src="loadarrr.js"></script>
+    <script>
+        (function(loadarrr)
+        {
+            if (loadarrr)
+            {
+                const visibleButton = document.getElementById("visible-button");
+                if (visibleButton !== undefined)
+                {
+                    visibleButton.addEventListener("click", () =>
+                    {
+                        if (loadarrr.visible)
+                            loadarrr.hide();
+                        else
+                            loadarrr.show();
+                    });
+                }
+
+                const enableButton = document.getElementById("enable-button");
+                if (enableButton !== undefined)
+                {
+                    enableButton.addEventListener("click", () =>
+                    {
+                        if (loadarrr.enabled)
+                            loadarrr.stop();
+                        else
+                            loadarrr.start();
+                    });
+                }
+            }
+        })(window.loadarrr);
+    </script>
 </body>
 </html>

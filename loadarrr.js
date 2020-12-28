@@ -1,11 +1,7 @@
-(function(doc)
+(function(wnd, doc)
 {
-    const stopButton = doc.getElementsByTagName("button")[0];
-
     class Progress
     {
-        _options = {};
-        _container = undefined;
         _animations = {
             linear: () =>
             {
@@ -87,16 +83,55 @@
                 };
             }
         };
-        _animHandle = 0;
+        _animHandle = undefined;
+
+        _options = {};
         _values = [];
 
         constructor(options)
         {
-            this._options = options || {};
+            this.setDefaults(options);
 
             if (this._options.closer !== undefined && this._options.closer.then !== undefined)
             {
                 this._options.closer.then(() => this.hide());
+            }
+
+        }
+
+        get visible()
+        {
+            return this._options.container.style.display === "flex";
+        }
+
+        get enabled()
+        {
+            return this._animHandle !== undefined;
+        }
+
+        setDefaults(options)
+        {
+            this._options = options || {};
+
+            if (!this._options.barCount)
+                this._options.barCount = 10;
+
+            if (!this._options.height)
+                this._options.height = 200;
+
+            if (!this._options.width)
+                this._options.width = 400;
+
+            if (!this._options.animate)
+                this._options.animate = "sin";
+
+            if (!this._options.updateInterval) // milliseconds
+                this._options.updateInterval = 100;
+
+            if (!this._options.container)
+            {
+                this._options.container = this.appendFlexBox(document.body);
+
             }
 
         }
@@ -119,63 +154,41 @@
             return stylesheet;
         }
 
-        insertFlexBox(parent /**: HTMLElement/**/)
+        appendFlexBox(parent /**: HTMLElement/**/)
         {
             if (parent === undefined || parent == doc)
                 parent = doc.body;
 
             const box = doc.createElement("div");
-            box.className = "__p-frame";
+            box.className = "__lr-frame";
 
             parent.appendChild(box);
             return box;
         }
 
-        setDefaults()
-        {
-            this._options = this._options || {};
-
-            if (!this._options.barCount)
-                this._options.barCount = 10;
-
-            if (!this._options.height)
-                this._options.height = 200;
-
-            if (!this._options.width)
-                this._options.width = 400;
-
-            if (!this._options.animate)
-                this._options.animate = "sin";
-
-            if (!this._options.updateInterval) // milliseconds
-                this._options.updateInterval = 100;
-        }
-
         build()
         {
-            this.setDefaults();
-
             const stylesheet = this.insertNewStyleSheet();
-            stylesheet.addRule(".__p-frame", "display: flex; flex: 1 1 auto; align-self: center; margin: 0; width: 100%;");
-            stylesheet.addRule(".__p-container", "flex-direction: column;");
-            stylesheet.addRule(".__p-shell", "height: " + this._options.height + "px; width: " + this._options.width + "px; align-items: flex-end;");
-            stylesheet.addRule(".__p-shell .__p-bar", "flex: 1 1 auto; margin: 0 5px; height: 100%; background-color: #ddd; border: solid 1px #ccc;");
-            stylesheet.addRule(".__p-shell .__p-bar:first-child", "margin-left: 0;");
-            stylesheet.addRule(".__p-shell .__p-bar:last-child", "margin-right: 0;");
+            stylesheet.addRule(".__lr-container", "flex-direction: column;");
+            stylesheet.addRule(".__lr-frame", "display: flex; flex: 1 1 auto; align-self: center; margin: 0; width: 100%;");
+            stylesheet.addRule(".__lr-shell", "height: " + this._options.height + "px; width: " + this._options.width + "px; align-items: flex-end;");
+            stylesheet.addRule(".__lr-shell .__lr-bar", "flex: 1 1 auto; margin: 0 5px; height: 100%; background-color: #ddd; border: solid 1px #ccc;");
+            stylesheet.addRule(".__lr-shell .__lr-bar:first-child", "margin-left: 0;");
+            stylesheet.addRule(".__lr-shell .__lr-bar:last-child", "margin-right: 0;");
 
-            doc.body.className = "__p-frame";
+            if (this._options.container === undefined)
+                throw new Error("catastrophic failure");
 
-            this._container = this.insertFlexBox(doc);
-            this._container.id = "__progress";
-            this._container.className = "__p-container __p-frame";
+            this._options.container.id = "__loadarrr";
+            this._options.container.className = "__lr-container __lr-frame";
 
-            const shell = this.insertFlexBox(this._container);
-            shell.className = "__p-shell __p-frame";
+            const shell = this.appendFlexBox(this._options.container);
+            shell.className = "__lr-shell __lr-frame";
 
             for (let i = 0; i < this._options.barCount; i++)
             {
                 const bar = doc.createElement("div");
-                bar.className = "__p-bar";
+                bar.className = "__lr-bar";
                 shell.appendChild(bar);
 
                 this._values[i] = 1;
@@ -186,14 +199,14 @@
 
         show()
         {
-            if (this._container !== undefined)
+            if (this._options.container !== undefined)
             {
-                this._container.style.display = "flex";
-                this.animate();
+                this._options.container.style.display = "flex";
+                this.start();
             }
         }
 
-        animate()
+        start()
         {
             const start = new Date().getTime();
             let setup = this._options.animate;
@@ -213,7 +226,7 @@
                     return;
                 }
 
-                const shell = doc.getElementsByClassName("__p-shell")[0];
+                const shell = doc.getElementsByClassName("__lr-shell")[0];
                 for (let i = 0; i < shell.children.length; i++)
                 {
                     const value = this._values[i];
@@ -229,36 +242,34 @@
             {
                 this._animHandle = setInterval(apply, this._options.updateInterval);
             }
-
-
         }
 
         stop()
         {
             if (this._animHandle)
+            {
                 clearInterval(this._animHandle);
+                this._animHandle = undefined;
+            }
         }
 
         hide()
         {
             this.stop();
 
-            if (this._container !== undefined)
-                this._container.style.display = "none";
+            if (this._options.container !== undefined)
+                this._options.container.style.display = "none";
         }
 
     }
 
-    if (!window.progress)
+    if (!wnd.loadarrr)
     {
-        const progress = new Progress({
+        const loadarrr = new Progress({
             barCount: 20
         });
-        progress.build();
+        loadarrr.build();
 
-        window.progress = progress;
-
-        stopButton.addEventListener("click", () => progress.stop());
+        wnd.loadarrr = loadarrr;
     }
-
-})(window.document);
+})(window, window.document);
