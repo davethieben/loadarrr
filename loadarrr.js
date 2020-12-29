@@ -1,6 +1,6 @@
 (function(wnd, doc)
 {
-    class Progress
+    class Loadarrr
     {
         _animations = {
             linear: () =>
@@ -116,23 +116,17 @@
             if (!this._options.barCount)
                 this._options.barCount = 10;
 
-            if (!this._options.height)
-                this._options.height = 200;
-
-            if (!this._options.width)
-                this._options.width = 400;
-
             if (!this._options.animate)
                 this._options.animate = "sin";
 
             if (!this._options.updateInterval) // milliseconds
                 this._options.updateInterval = 100;
 
-            if (!this._options.container)
-            {
-                this._options.container = this.appendFlexBox(document.body);
+            if (!this._options.theme)
+                this._options.theme = "default";
 
-            }
+            if (!this._options.container)
+                this._options.container = this.appendFlexBox(document.body);
 
         }
 
@@ -169,10 +163,16 @@
         build()
         {
             const stylesheet = this.insertNewStyleSheet();
-            stylesheet.addRule(".__lr-container", "flex-direction: column;");
-            stylesheet.addRule(".__lr-frame", "display: flex; flex: 1 1 auto; align-self: center; margin: 0; width: 100%;");
-            stylesheet.addRule(".__lr-shell", "height: " + this._options.height + "px; width: " + this._options.width + "px; align-items: flex-end;");
-            stylesheet.addRule(".__lr-shell .__lr-bar", "flex: 1 1 auto; margin: 0 5px; height: 100%; background-color: #ddd; border: solid 1px #ccc;");
+
+            // theming styles:
+            stylesheet.addRule(".loadarrr.loadarrr-theme-default", "background-color: white;");
+            stylesheet.addRule(".loadarrr.loadarrr-theme-default .loadarrr-bar", "margin: 0 5px; background-color: #ddd; border: solid 1px #ccc;");
+
+            // structural styling:
+            stylesheet.addRule(".loadarrr", "flex-direction: column;");
+            stylesheet.addRule(".__lr-frame", "display: flex; flex: 1 1 auto; align-self: center; margin: 0; min-height: 50px; position: relative; width: 100%;");
+            stylesheet.addRule(".__lr-shell", "align-items: flex-end; position: absolute; top: 0; bottom: 0;");
+            stylesheet.addRule(".__lr-shell .__lr-bar", "flex: 1 1 auto;");
             stylesheet.addRule(".__lr-shell .__lr-bar:first-child", "margin-left: 0;");
             stylesheet.addRule(".__lr-shell .__lr-bar:last-child", "margin-right: 0;");
 
@@ -180,7 +180,7 @@
                 throw new Error("catastrophic failure");
 
             this._options.container.id = "__loadarrr";
-            this._options.container.className = "__lr-container __lr-frame";
+            this._options.container.className = "loadarrr __lr-frame loadarrr-theme-" + this._options.theme;
 
             const shell = this.appendFlexBox(this._options.container);
             shell.className = "__lr-shell __lr-frame";
@@ -188,7 +188,7 @@
             for (let i = 0; i < this._options.barCount; i++)
             {
                 const bar = doc.createElement("div");
-                bar.className = "__lr-bar";
+                bar.className = "__lr-bar loadarrr-bar";
                 shell.appendChild(bar);
 
                 this._values[i] = 1;
@@ -265,7 +265,7 @@
 
     if (!wnd.loadarrr)
     {
-        const loadarrr = new Progress({
+        const loadarrr = new Loadarrr({
             barCount: 20
         });
         loadarrr.build();
